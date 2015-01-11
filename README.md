@@ -8,11 +8,14 @@ The goal is to record a sequence through
 your midi controller and vary the tempo
 and pauses in between the notes.
 
-The current version is based upon the fritzing
+The hardware schematic is based upon the fritzing
 sketch of SimplenZAR:
 http://www.roebbeling.de/wordpress/wp-content/uploads/2011/02/simplenZAR.fz_.zip
 But that is only temporary. It will be changed very soon
 to have a MIDI input.
+
+Fritzing can be downloaded here:
+http://fritzing.org/download/
 
 This project uses Eclipse Arduino IDE, because the original
 Arduino IDE does not work for a project beyond a 
