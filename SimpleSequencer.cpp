@@ -178,6 +178,8 @@ void record(){
 			sequence[lastStep].command = commandByte;
 			sequence[lastStep].param1 = noteByte;
 			sequence[lastStep].param2 = velocityByte;
+
+			sendMidiCommand(sequence[lastStep]);
 		}
 	}
 }
