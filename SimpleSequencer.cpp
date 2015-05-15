@@ -6,9 +6,6 @@
 
 struct MidiCommand sequence[30];
 
-StopWatch playWatch = StopWatch();
-StopWatch recordWatch = StopWatch();
-
 const int stepLed1 = 6;
 const int stepLed2 = 7;
 const int stepLed3 = 8;
@@ -129,9 +126,10 @@ void sendMidiCommandParams(byte command, byte param1, byte param2) {
 }
 
 //Ein Step sind immer zwei
-//Sequence- Commands (Note ein, Note aus)
+//Sequence- Steps (Note ein, Note aus)
 int lastStep = 3; //lastSequence-1 / 2
 int currentStep = 3; //begins with lastStep
+int sequenceStep = 7;
 boolean playState = false;
 boolean recordState = false;
 boolean lastPlayButtonState = false;
@@ -143,8 +141,6 @@ void loop() {
 	if(playPressed && (playPressed != lastPlayButtonState)) {
 		playState = !playState;
 		recordState = false;
-		playWatch.stop();
-		playWatch.reset();
 		digitalWrite(modeLed2, LOW);
 		digitalWrite(modeLed1, HIGH);
 		currentStep = lastStep;
@@ -155,6 +151,7 @@ void loop() {
 		digitalWrite(modeLed1, LOW);
 		digitalWrite(modeLed2, HIGH);
 		lastStep = -1;
+		sequenceStep = -1;
 	}
 	lastPlayButtonState = playPressed;
 	lastRecordButtonState = recordPressed;
@@ -170,30 +167,40 @@ void loop() {
 void record(){
 	while (Serial.available() > 2) {
 		byte commandByte = Serial.read();//read first byte
-		byte noteByte = Serial.read();//read next byte
-		byte velocityByte = Serial.read();//read final byte
 
 		if(commandByte == NOTE_ON || commandByte == NOTE_OFF) {
-			lastStep++;
-			sequence[lastStep].command = commandByte;
-			sequence[lastStep].param1 = noteByte;
-			sequence[lastStep].param2 = velocityByte;
+			byte noteByte = Serial.read();//read next byte
+			byte velocityByte = Serial.read();//read final byte
+			sequenceStep++;
+			lastStep = sequenceStep / 2;
+			sequence[sequenceStep].command = commandByte;
+			sequence[sequenceStep].param1 = noteByte;
+			sequence[sequenceStep].param2 = velocityByte;
 
-			sendMidiCommand(sequence[lastStep]);
+			sendMidiCommand(sequence[sequenceStep]);
+		}
+		else {
+			break;
 		}
 	}
 }
+
+//boolean isCommand(byte midiByte) {
+//	byte command = midiByte & 10000000;
+//	command = command >> 7;
+//	if(command == 1) {
+//		return true;
+//	}
+//	else {
+//		return false;
+//	}
+//}
 
 
 /**
  * Play
  **/
 void play() {
-	//  delay(500);
-	//  if(playWatch.state() == StopWatch::RESET) {
-	//    playWatch.start();
-	//  }
-
 	int potiValue = analogRead(tempoPoti);
 	unsigned int calculatedDelay = calcDelay(potiValue);
 
@@ -204,26 +211,17 @@ void play() {
 		currentStep++;
 	}
 
-	//Serial.println(playWatch.elapsed());
-
-	//  if(currentStep != 0 && playWatch.elapsed() < calculatedDelay) {
-	//    return;
-	//  }
-	//  playWatch.reset();
-	//  playWatch.start();
-
 	nextLed(currentStep, lastStep);
-	int sequenceStep = (currentStep + 1) * 2 - 1;
-	sendMidiCommand(sequence[sequenceStep-1]);
+	int sequenceStep = currentStep * 2;
+	if(currentStep == 0) {
+		sendMidiCommand(sequence[lastStep]);
+	}
+	else {
+		sendMidiCommand(sequence[sequenceStep-1]);
+	}
 	sendMidiCommand(sequence[sequenceStep]);
 
 	delay(calculatedDelay);
-
-	//Serial.println(sequenceStep);
-
-
-	//Serial.println(potiValue);
-	//Serial.println(tempo);
 }
 
 int calcDelay(int potiValue) {
