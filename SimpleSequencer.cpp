@@ -159,8 +159,17 @@ void loop() {
 	if(playState) {
 		play();
 	}
-	if(recordState) {
+	else if(recordState) {
 		record();
+	}
+	else { //Stop State
+		midiThrough();
+	}
+}
+
+void midiThrough() {
+	if(Serial.available() > 0) {
+		Serial.write(Serial.read());
 	}
 }
 

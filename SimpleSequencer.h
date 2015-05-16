@@ -24,6 +24,7 @@ void setup();
 void setupMelody();
 void sendMidiCommand(struct MidiCommand command);
 void sendMidiCommandParams(byte command, byte param1, byte param2);
+void midiThrough();
 void record();
 void play();
 int calcDelay(int potiValue);
