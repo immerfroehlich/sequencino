@@ -1,10 +1,9 @@
 // Do not remove the include below
 #include "SimpleSequencer.h"
 
-
 #include "StopWatch.h"
 
-struct MidiCommand sequence[30];
+struct MidiCommand sequence[32];
 
 const int stepLed1 = 6;
 const int stepLed2 = 7;
@@ -25,8 +24,10 @@ int tempoPotiPosition;
 const int playButton = A0;
 const int recordButton = A1;
 
-const byte NOTE_ON = 144;
-const byte NOTE_OFF = 128;
+//const byte NOTE_ON = 144;
+const byte NOTE_ON = 0x90;
+//const byte NOTE_OFF = 128;
+const byte NOTE_OFF = 0x80;
 
 
 int step = 0;
@@ -135,9 +136,12 @@ boolean recordState = false;
 boolean lastPlayButtonState = false;
 boolean lastRecordButtonState = false;
 
-void loop() {
+void loop(){
 	boolean playPressed = analogRead(playButton) > 500 ? true : false;
+	//boolean playPressed = digitalRead(playButton); 
+	
 	boolean recordPressed = analogRead(recordButton) > 500 ? true : false;
+	//boolean recordPressed = digitalRead(recordButton);  
 	if(playPressed && (playPressed != lastPlayButtonState)) {
 		playState = !playState;
 		recordState = false;
@@ -223,10 +227,10 @@ void play() {
 	nextLed(currentStep, lastStep);
 	int sequenceStep = currentStep * 2;
 	if(currentStep == 0) {
-		sendMidiCommand(sequence[lastStep]);
+		sendMidiCommand(sequence[lastStep * 2 + 1]);
 	}
 	else {
-		sendMidiCommand(sequence[sequenceStep-1]);
+		sendMidiCommand(sequence[sequenceStep - 1]);
 	}
 	sendMidiCommand(sequence[sequenceStep]);
 
