@@ -1,17 +1,31 @@
 $fn = 50;
 
 difference() {
-	cube([10,5,3]);
+	cube([120,50,30]);
 
-	translate([0.5, 0.5, -0.5]) {
-		cube([9, 4, 3]);
+	translate([5, 5, -5]) {
+		cube([110, 40, 30]);
 	}
 
-	translate([0.25, 0.25, -0.5]) {
-		cube([9.5, 4.5, 1]);
+	translate([2.5, 2.5, -5]) {
+		cube([115, 45, 10]);
 	}
 
-	translate([1.5, 3.5, 3]){
-		sphere(1);
+	translate([25, 35, 20]){
+		ledBoard();
 	}
 }
+
+module ledBoard() {
+	for (i=[0: 10: 70]) {
+		translate([i, 0, 0]) {
+			led();
+		}
+	}
+}
+
+module led() {
+	cylinder(15, 2.5, 2.5);
+}
+
+
