@@ -14,7 +14,25 @@ difference() {
 	translate([25, 35, 20]){
 		ledBoard();
 	}
+
+	translate([25, 15, 27.5]){
+		cube(10, center=true); //Button
+	}
+
+	translate([95, 15, 27.5]){
+		cube(10, center=true); //Button
+	}
+
+	translate([50, 15, 20]) {
+		led(); //Poti
+	}
+
+	translate([70, 15, 20]) {
+		led(); //Poti
+	}
 }
+
+
 
 module ledBoard() {
 	for (i=[0: 10: 70]) {
