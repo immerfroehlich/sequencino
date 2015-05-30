@@ -19,12 +19,42 @@ midiX = 21.2;
 midiZ = 19.5; //y in Draufsicht
 midiDistance = 15;
 
-complete();
+topCase();
+//buttomCase();
 
+module buttomCase() {
+	buttomZ = 20;
 
-module complete() {
+	roomX = caseWidth - (2 * wallThickness);
+	roomY = caseDepth - (2 * wallThickness);
+
+	difference(){
+		cube([caseWidth, caseDepth, buttomZ]);
+
+		translate([wallThickness, wallThickness, -wallThickness]) {
+			cube([roomX, roomY, buttomZ]);
+		}
+
+		buttomCaseOuterInlay();
+	}
+}
+
+module buttomCaseOuterInlay() {
+	roomX = caseWidth - (2 * inlayThickness);
+	roomY = caseDepth - (2 * inlayThickness);
 	
+	difference(){
+		translate([-0.5, -0.5, -1]) {
+			cube([caseWidth+1, caseDepth+1, inlayHighness + 1]);
+		}
 
+		translate([inlayThickness, inlayThickness, -1.5]) {
+			cube([roomX, roomY, (inlayHighness + 1 + 1)]);
+		}
+	}
+}
+
+module topCase() {
 	difference() {
 		case();
 
