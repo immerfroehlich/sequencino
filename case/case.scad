@@ -1,38 +1,112 @@
-$fn = 50;
+$fn = 100;
 
-difference() {
-	cube([120,50,30]);
+//Measurement is defined in millimeters
 
-	translate([5, 5, -5]) {
-		cube([110, 40, 30]);
-	}
+printerTolerance = 0.6;
+ledRadius = 2.5;
+potiRadius = 2.55;
+buttonXY = 6;
 
-	translate([2.5, 2.5, -5]) {
-		cube([115, 45, 10]);
-	}
+caseWidth = 120;
+caseDepth = 50;
+caseHeight = 30;
 
-	translate([25, 35, 20]){
-		ledBoard();
-	}
+wallThickness = 5;
+inlayThickness = 2.5;
+inlayHighness = 5;
 
-	translate([25, 15, 27.5]){
-		cube(10, center=true); //Button
-	}
+midiX = 21.2;
+midiZ = 19.5; //y in Draufsicht
+midiDistance = 15;
 
-	translate([95, 15, 27.5]){
-		cube(10, center=true); //Button
-	}
+complete();
 
-	translate([50, 15, 20]) {
-		led(); //Poti
-	}
 
-	translate([70, 15, 20]) {
-		led(); //Poti
+module complete() {
+	
+
+	difference() {
+		case();
+
+		positionedMidiPanel();
+
+		translate([25, 35, 20]){
+			ledBoard();
+		}
+
+		translate([25, 15, 27.5]){
+			button();
+		}
+
+		translate([95, 15, 27.5]){
+			button();
+		}
+
+		translate([50, 15, 20]) {
+			poti();
+		}
+
+		translate([70, 15, 20]) {
+			poti();
+		}
 	}
 }
 
+module case() {
+	roomX = caseWidth - (2 * wallThickness);
+	roomY = caseDepth - (2 * wallThickness);
+	roomZ = caseHeight;
 
+	inlayX = caseWidth - (2 * inlayThickness);
+	inlayY = caseDepth - (2 * inlayThickness);
+	inlayZ = inlayHighness;
+
+	difference() {
+		cube([caseWidth, caseDepth, caseHeight]);
+
+		translate([wallThickness, wallThickness, -wallThickness]) {
+			cube([roomX, roomY, roomZ]);
+		}
+
+		translate([inlayThickness, inlayThickness, -1]) {
+			cube([inlayX, inlayY, (inlayZ + 1)]);
+		}
+	}
+}
+
+module positionedMidiPanel() {
+	midiPanelWidth = 2 * midiX + midiDistance + 2 * printerTolerance;
+	xOffset = (caseWidth - midiPanelWidth) / 2;
+	yOffset = caseDepth - wallThickness - 0.5;
+	
+	translate([xOffset, yOffset, -1]) {
+		midiPanel();
+	}
+}
+
+module midiPanel() {
+	midi();
+
+	distance = midiX + midiDistance + printerTolerance;
+
+	translate([distance, 0, 0]) {
+		midi();
+	}
+}
+
+module midi() {
+	height = caseHeight - wallThickness + 1;
+	y = wallThickness + 1;
+	cube( size=[(midiX + printerTolerance), y, height]);
+}
+
+module button() {
+	cube( (buttonXY + printerTolerance), center=true);
+}
+
+module poti() {
+	cylinder(h=15, r=(potiRadius + printerTolerance) );
+}
 
 module ledBoard() {
 	for (i=[0: 10: 70]) {
@@ -43,7 +117,7 @@ module ledBoard() {
 }
 
 module led() {
-	cylinder(15, 2.5, 2.5);
+	cylinder(h=15, r=(ledRadius + printerTolerance) );
 }
 
 
