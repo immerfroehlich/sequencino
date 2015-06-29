@@ -25,3 +25,11 @@ Download V2.3 here:
 http://eclipse.baeyens.it/download.php
 And Arduino 1.5.x here:
 http://arduino.cc/en/Main/Software
+
+
+Another Needed Infos
+========================================
+To burn the Arduino bootloader to your Atmega 328P- PU
+you need the following Sketch:
+https://github.com/WestfW/OptiLoader
+Use the Layout from https://www.arduino.cc/en/Tutorial/ArduinoToBreadboard
