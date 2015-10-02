@@ -56,6 +56,7 @@ For midi modules
 ----------------------
 - 2x DIN Midi Stecker
 - 1x Optokoppler 6N 138, DIP 8 (http://www.reichelt.de/Optokoppler/6N-138/3/index.html?ACTION=3&GROUPID=3046&ARTICLE=2859&SEARCH=6N%20138&OFFSET=16&WKID=0&)
+- Diode 1N 4148 (http://www.reichelt.de/1N-UF-AA-Dioden/1N-4148/3/index.html?ACTION=3&GROUPID=2987&ARTICLE=1730&SEARCH=1n%204148&OFFSET=16&WKID=0&)
 
 Anything else
 ----------------------
