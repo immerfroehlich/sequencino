@@ -3,6 +3,8 @@
 
 #include "StopWatch.h"
 
+StopWatch stopwatch = StopWatch();
+
 struct MidiCommand sequence[32];
 
 const int stepLed1 = 6;
@@ -65,34 +67,42 @@ void setupMelody() {
 	sequence[0].command = NOTE_ON;
 	sequence[0].param1 = 50;
 	sequence[0].param2 = 100;
+	sequence[0].length = 500;
 
 	sequence[1].command = NOTE_OFF;
 	sequence[1].param1 = 50;
 	sequence[1].param2 = 100;
+	sequence[1].length = 1000;
 
 	sequence[2].command = NOTE_ON;
 	sequence[2].param1 = 52;
 	sequence[2].param2 = 100;
+	sequence[2].length = 500;
 
 	sequence[3].command = NOTE_OFF;
 	sequence[3].param1 = 52;
 	sequence[3].param2 = 100;
+	sequence[3].length = 1000;
 
 	sequence[4].command = NOTE_ON;
 	sequence[4].param1 = 54;
 	sequence[4].param2 = 100;
+	sequence[5].length = 500;
 
 	sequence[5].command = NOTE_OFF;
 	sequence[5].param1 = 54;
 	sequence[5].param2 = 100;
+	sequence[5].length = 1000;
 
 	sequence[6].command = NOTE_ON;
 	sequence[6].param1 = 57;
 	sequence[6].param2 = 100;
+	sequence[6].length = 1000;
 
 	sequence[7].command = NOTE_OFF;
 	sequence[7].param1 = 57;
 	sequence[7].param2 = 100;
+	sequence[7].length = 500;
 }
 
 /**
@@ -126,10 +136,9 @@ void sendMidiCommandParams(byte command, byte param1, byte param2) {
 	Serial.write(param2);
 }
 
-//Ein Step sind immer zwei
-//Sequence- Steps (Note ein, Note aus)
-int lastStep = 3; //lastSequence-1 / 2
-int currentStep = 3; //begins with lastStep
+//Ein Step ein Command in der Sequenz
+int lastStep = 7;
+int currentStep = 7; //begins with lastStep
 int sequenceStep = 7;
 boolean playState = false;
 boolean recordState = false;
@@ -214,8 +223,12 @@ void record(){
  * Play
  **/
 void play() {
-	int potiValue = analogRead(tempoPoti);
-	unsigned int calculatedDelay = calcDelay(potiValue);
+//	int potiValue = analogRead(tempoPoti);
+//	unsigned int calculatedDelay = calcDelay(potiValue);
+
+	if(stopwatch.isRunning() && sequence[currentStep].length > stopwatch.elapsed()) {
+		return;
+	}
 
 	if(currentStep == lastStep) {
 		currentStep = 0;
@@ -224,17 +237,21 @@ void play() {
 		currentStep++;
 	}
 
-	nextLed(currentStep, lastStep);
-	int sequenceStep = currentStep * 2;
+	//nextLed(currentStep, lastStep);
+	//int sequenceStep = currentStep * 2;
 	if(currentStep == 0) {
-		sendMidiCommand(sequence[lastStep * 2 + 1]);
+		if(!stopwatch.isRunning()) {
+			stopwatch.start();
+		}
+		else {
+			stopwatch.reset();
+		}
+		sendMidiCommand(sequence[currentStep]);
 	}
 	else {
-		sendMidiCommand(sequence[sequenceStep - 1]);
+		stopwatch.reset();
+		sendMidiCommand(sequence[currentStep]);
 	}
-	sendMidiCommand(sequence[sequenceStep]);
-
-	delay(calculatedDelay);
 }
 
 int calcDelay(int potiValue) {

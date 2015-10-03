@@ -14,10 +14,15 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/**
+ * length in miliseconds
+ */
 struct MidiCommand {
   byte command;
   byte param1;
   byte param2;
+  unsigned int length;
 };
 void loop();
 void setup();
