@@ -26,10 +26,10 @@ int tempoPotiPosition;
 const int playButton = A0;
 const int recordButton = A1;
 
-//const byte NOTE_ON = 144;
-const byte NOTE_ON = 0x90;
-//const byte NOTE_OFF = 128;
-const byte NOTE_OFF = 0x80;
+const byte NOTE_ON = 144;
+//const byte NOTE_ON = 0x90;
+const byte NOTE_OFF = 128;
+//const byte NOTE_OFF = 0x80;
 
 
 int step = 0;
@@ -72,37 +72,37 @@ void setupMelody() {
 	sequence[1].command = NOTE_OFF;
 	sequence[1].param1 = 50;
 	sequence[1].param2 = 100;
-	sequence[1].length = 1000;
+	sequence[1].length = 50;
 
 	sequence[2].command = NOTE_ON;
-	sequence[2].param1 = 52;
+	sequence[2].param1 = 51;
 	sequence[2].param2 = 100;
 	sequence[2].length = 500;
 
 	sequence[3].command = NOTE_OFF;
-	sequence[3].param1 = 52;
+	sequence[3].param1 = 51;
 	sequence[3].param2 = 100;
-	sequence[3].length = 1000;
+	sequence[3].length = 50;
 
 	sequence[4].command = NOTE_ON;
-	sequence[4].param1 = 54;
+	sequence[4].param1 = 52;
 	sequence[4].param2 = 100;
 	sequence[5].length = 500;
 
 	sequence[5].command = NOTE_OFF;
-	sequence[5].param1 = 54;
+	sequence[5].param1 = 52;
 	sequence[5].param2 = 100;
-	sequence[5].length = 1000;
+	sequence[5].length = 50;
 
 	sequence[6].command = NOTE_ON;
-	sequence[6].param1 = 57;
+	sequence[6].param1 = 53;
 	sequence[6].param2 = 100;
-	sequence[6].length = 1000;
+	sequence[6].length = 500;
 
 	sequence[7].command = NOTE_OFF;
-	sequence[7].param1 = 57;
+	sequence[7].param1 = 53;
 	sequence[7].param2 = 100;
-	sequence[7].length = 500;
+	sequence[7].length = 50;
 }
 
 /**
@@ -139,7 +139,6 @@ void sendMidiCommandParams(byte command, byte param1, byte param2) {
 //Ein Step ein Command in der Sequenz
 int lastStep = 7;
 int currentStep = 7; //begins with lastStep
-int sequenceStep = 7;
 boolean playState = false;
 boolean recordState = false;
 boolean lastPlayButtonState = false;
@@ -164,7 +163,9 @@ void loop(){
 		digitalWrite(modeLed1, LOW);
 		digitalWrite(modeLed2, HIGH);
 		lastStep = -1;
-		sequenceStep = -1;
+		currentStep = -1;
+		stopwatch.reset();
+		stopwatch.start();
 	}
 	lastPlayButtonState = playPressed;
 	lastRecordButtonState = recordPressed;
@@ -181,7 +182,9 @@ void loop(){
 }
 
 void midiThrough() {
-	if(Serial.available() > 0) {
+	if(Serial.available() > 2) {
+		Serial.write(Serial.read());
+		Serial.write(Serial.read());
 		Serial.write(Serial.read());
 	}
 }
@@ -191,15 +194,20 @@ void record(){
 		byte commandByte = Serial.read();//read first byte
 
 		if(commandByte == NOTE_ON || commandByte == NOTE_OFF) {
+			unsigned int length = stopwatch.elapsed();
 			byte noteByte = Serial.read();//read next byte
 			byte velocityByte = Serial.read();//read final byte
-			sequenceStep++;
-			lastStep = sequenceStep / 2;
-			sequence[sequenceStep].command = commandByte;
-			sequence[sequenceStep].param1 = noteByte;
-			sequence[sequenceStep].param2 = velocityByte;
+			currentStep++;
+			lastStep = currentStep;
+			sequence[currentStep].command = commandByte;
+			sequence[currentStep].param1 = noteByte;
+			sequence[currentStep].param2 = velocityByte;
+			sequence[currentStep].length = length;
 
-			sendMidiCommand(sequence[sequenceStep]);
+			stopwatch.reset();
+			stopwatch.start();
+
+			sendMidiCommand(sequence[currentStep]);
 		}
 		else {
 			break;
@@ -227,6 +235,7 @@ void play() {
 //	unsigned int calculatedDelay = calcDelay(potiValue);
 
 	if(stopwatch.isRunning() && sequence[currentStep].length > stopwatch.elapsed()) {
+		//Serial.write(" StopWatch Hold ");
 		return;
 	}
 
@@ -239,19 +248,12 @@ void play() {
 
 	//nextLed(currentStep, lastStep);
 	//int sequenceStep = currentStep * 2;
-	if(currentStep == 0) {
-		if(!stopwatch.isRunning()) {
-			stopwatch.start();
-		}
-		else {
-			stopwatch.reset();
-		}
-		sendMidiCommand(sequence[currentStep]);
-	}
-	else {
-		stopwatch.reset();
-		sendMidiCommand(sequence[currentStep]);
-	}
+	stopwatch.reset();
+	stopwatch.start();
+
+	//Serial.write("Write Command");
+	sendMidiCommand(sequence[currentStep]);
+	//Serial.write(currentStep);
 }
 
 int calcDelay(int potiValue) {
