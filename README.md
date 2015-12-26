@@ -11,8 +11,10 @@ and pauses in between the notes.
 The hardware schematic is based upon the fritzing
 sketch of SimplenZAR:
 http://www.roebbeling.de/wordpress/wp-content/uploads/2011/02/simplenZAR.fz_.zip
-But that is only temporary. It will be changed very soon
-to have a MIDI input.
+But that is only temporary.
+The midi input schematic is based upon the "Send and Receive MIDI with Arduino"
+instructable tutorial by amandaghassaei:
+http://www.instructables.com/id/Send-and-Receive-MIDI-with-Arduino/?ALLSTEPS
 
 Fritzing can be downloaded here:
 http://fritzing.org/download/
