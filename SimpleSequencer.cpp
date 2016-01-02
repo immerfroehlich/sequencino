@@ -3,6 +3,10 @@
 
 #include "StopWatch.h"
 
+#include "MIDI.h"
+
+MIDI_CREATE_DEFAULT_INSTANCE();
+
 StopWatch stopwatch = StopWatch();
 
 struct MidiCommand sequence[32];
@@ -58,48 +62,50 @@ void setup() {
 
 	setupMelody();
 
+	MIDI.begin();
 
-	Serial.begin(31250); //Baudrate for Midi
+
+	//Serial.begin(31250); //Baudrate for Midi
 	//Serial.begin(9600); //Baudrate for Serial communication = Debugging
 }
 
 void setupMelody() {
-	sequence[0].command = NOTE_ON;
+	sequence[0].command = midi::NoteOn;
 	sequence[0].param1 = 50;
 	sequence[0].param2 = 100;
 	sequence[0].length = 500;
 
-	sequence[1].command = NOTE_OFF;
+	sequence[1].command = midi::NoteOff;
 	sequence[1].param1 = 50;
 	sequence[1].param2 = 100;
 	sequence[1].length = 50;
 
-	sequence[2].command = NOTE_ON;
+	sequence[2].command = midi::NoteOn;
 	sequence[2].param1 = 51;
 	sequence[2].param2 = 100;
 	sequence[2].length = 500;
 
-	sequence[3].command = NOTE_OFF;
+	sequence[3].command = midi::NoteOff;
 	sequence[3].param1 = 51;
 	sequence[3].param2 = 100;
 	sequence[3].length = 50;
 
-	sequence[4].command = NOTE_ON;
+	sequence[4].command = midi::NoteOn;
 	sequence[4].param1 = 52;
 	sequence[4].param2 = 100;
 	sequence[5].length = 500;
 
-	sequence[5].command = NOTE_OFF;
+	sequence[5].command = midi::NoteOff;
 	sequence[5].param1 = 52;
 	sequence[5].param2 = 100;
 	sequence[5].length = 50;
 
-	sequence[6].command = NOTE_ON;
+	sequence[6].command = midi::NoteOn;
 	sequence[6].param1 = 53;
 	sequence[6].param2 = 100;
 	sequence[6].length = 500;
 
-	sequence[7].command = NOTE_OFF;
+	sequence[7].command = midi::NoteOff;
 	sequence[7].param1 = 53;
 	sequence[7].param2 = 100;
 	sequence[7].length = 50;
@@ -127,7 +133,7 @@ void nextLed(int currentStep, int lastStep) {
 }
 
 void sendMidiCommand(struct MidiCommand command) {
-	sendMidiCommandParams(command.command, command.param1, command.param2);
+	MIDI.send(command.command, command.param1, command.param2, 1);
 }
 
 void sendMidiCommandParams(byte command, byte param1, byte param2) {
@@ -182,36 +188,30 @@ void loop(){
 }
 
 void midiThrough() {
-	if(Serial.available() > 2) {
-		Serial.write(Serial.read());
-		Serial.write(Serial.read());
-		Serial.write(Serial.read());
-	}
+	//Midi through is a configuration in the MIDI library
+
+
+//	if(Serial.available() > 2) {
+//		Serial.write(Serial.read());
+//		Serial.write(Serial.read());
+//		Serial.write(Serial.read());
+//	}
 }
 
 void record(){
-	while (Serial.available() > 2) {
-		byte commandByte = Serial.read();//read first byte
+	if (MIDI.read()) {               // Is there a MIDI message incoming ?
+		unsigned int length = stopwatch.elapsed();
+		currentStep++;
+		lastStep = currentStep;
+		sequence[currentStep].command = MIDI.getType();
+		sequence[currentStep].param1 = MIDI.getData1();
+		sequence[currentStep].param2 = MIDI.getData2();
+		sequence[currentStep].length = length;
 
-		if(commandByte == NOTE_ON || commandByte == NOTE_OFF) {
-			unsigned int length = stopwatch.elapsed();
-			byte noteByte = Serial.read();//read next byte
-			byte velocityByte = Serial.read();//read final byte
-			currentStep++;
-			lastStep = currentStep;
-			sequence[currentStep].command = commandByte;
-			sequence[currentStep].param1 = noteByte;
-			sequence[currentStep].param2 = velocityByte;
-			sequence[currentStep].length = length;
+		stopwatch.reset();
+		stopwatch.start();
 
-			stopwatch.reset();
-			stopwatch.start();
-
-			sendMidiCommand(sequence[currentStep]);
-		}
-		else {
-			break;
-		}
+		sendMidiCommand(sequence[currentStep]);
 	}
 }
 

@@ -7,6 +7,7 @@
 #ifndef _SimpleSequencer_H_
 #define _SimpleSequencer_H_
 #include "Arduino.h"
+#include "midi_Defs.h"
 //add your includes for the project ArduinoTest here
 
 
@@ -19,7 +20,7 @@ extern "C" {
  * length in miliseconds
  */
 struct MidiCommand {
-  byte command;
+  midi::MidiType command;
   byte param1;
   byte param2;
   unsigned int length;
