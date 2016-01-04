@@ -16,18 +16,8 @@
 extern "C" {
 #endif
 
-/**
- * length in miliseconds
- */
-struct MidiCommand {
-  midi::MidiType command;
-  byte param1;
-  byte param2;
-  unsigned int length;
-};
 void loop();
 void setup();
-void setupMelody();
 void sendMidiCommand(struct MidiCommand command);
 void sendMidiCommandParams(byte command, byte param1, byte param2);
 void midiThrough();

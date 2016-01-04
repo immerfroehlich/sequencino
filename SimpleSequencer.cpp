@@ -3,13 +3,17 @@
 
 #include "StopWatch.h"
 
+#include "Sequence.h"
+
 #include "MIDI.h"
 
 MIDI_CREATE_DEFAULT_INSTANCE();
 
 StopWatch stopwatch = StopWatch();
 
-struct MidiCommand sequence[32];
+Sequence sequence = Sequence();
+
+//struct MidiCommand sequence[32];
 
 const int stepLed1 = 6;
 const int stepLed2 = 7;
@@ -60,8 +64,6 @@ void setup() {
 	pinMode(playButton, INPUT);
 	pinMode(recordButton, INPUT);
 
-	setupMelody();
-
 	MIDI.begin();
 
 
@@ -69,47 +71,7 @@ void setup() {
 	//Serial.begin(9600); //Baudrate for Serial communication = Debugging
 }
 
-void setupMelody() {
-	sequence[0].command = midi::NoteOn;
-	sequence[0].param1 = 50;
-	sequence[0].param2 = 100;
-	sequence[0].length = 500;
 
-	sequence[1].command = midi::NoteOff;
-	sequence[1].param1 = 50;
-	sequence[1].param2 = 100;
-	sequence[1].length = 50;
-
-	sequence[2].command = midi::NoteOn;
-	sequence[2].param1 = 51;
-	sequence[2].param2 = 100;
-	sequence[2].length = 500;
-
-	sequence[3].command = midi::NoteOff;
-	sequence[3].param1 = 51;
-	sequence[3].param2 = 100;
-	sequence[3].length = 50;
-
-	sequence[4].command = midi::NoteOn;
-	sequence[4].param1 = 52;
-	sequence[4].param2 = 100;
-	sequence[5].length = 500;
-
-	sequence[5].command = midi::NoteOff;
-	sequence[5].param1 = 52;
-	sequence[5].param2 = 100;
-	sequence[5].length = 50;
-
-	sequence[6].command = midi::NoteOn;
-	sequence[6].param1 = 53;
-	sequence[6].param2 = 100;
-	sequence[6].length = 500;
-
-	sequence[7].command = midi::NoteOff;
-	sequence[7].param1 = 53;
-	sequence[7].param2 = 100;
-	sequence[7].length = 50;
-}
 
 /**
  * LED and counter
@@ -136,15 +98,6 @@ void sendMidiCommand(struct MidiCommand command) {
 	MIDI.send(command.command, command.param1, command.param2, 1);
 }
 
-void sendMidiCommandParams(byte command, byte param1, byte param2) {
-	Serial.write(command);
-	Serial.write(param1);
-	Serial.write(param2);
-}
-
-//Ein Step ein Command in der Sequenz
-int lastStep = 7;
-int currentStep = 7; //begins with lastStep
 boolean playState = false;
 boolean recordState = false;
 boolean lastPlayButtonState = false;
@@ -161,15 +114,14 @@ void loop(){
 		recordState = false;
 		digitalWrite(modeLed2, LOW);
 		digitalWrite(modeLed1, HIGH);
-		currentStep = lastStep;
+		sequence.resetPlaybackState();
 	}
 	if(recordPressed && (recordPressed != lastRecordButtonState)) {
 		recordState = !recordState;
 		playState = false;
 		digitalWrite(modeLed1, LOW);
 		digitalWrite(modeLed2, HIGH);
-		lastStep = -1;
-		currentStep = -1;
+		sequence.resetRecordState();
 		stopwatch.reset();
 		stopwatch.start();
 	}
@@ -201,31 +153,17 @@ void midiThrough() {
 void record(){
 	if (MIDI.read()) {               // Is there a MIDI message incoming ?
 		unsigned int length = stopwatch.elapsed();
-		currentStep++;
-		lastStep = currentStep;
-		sequence[currentStep].command = MIDI.getType();
-		sequence[currentStep].param1 = MIDI.getData1();
-		sequence[currentStep].param2 = MIDI.getData2();
-		sequence[currentStep].length = length;
+		sequence.nextStep();
 
+		//Wird das hier erzeugte MidiCommand wieder aufgeräumt?
+		MidiCommand command = {MIDI.getType(), MIDI.getData1(), MIDI.getData2(), length};
+		sequence.setCurrentMidiCommand(command);
 		stopwatch.reset();
 		stopwatch.start();
 
-		sendMidiCommand(sequence[currentStep]);
+		sendMidiCommand(command);
 	}
 }
-
-//boolean isCommand(byte midiByte) {
-//	byte command = midiByte & 10000000;
-//	command = command >> 7;
-//	if(command == 1) {
-//		return true;
-//	}
-//	else {
-//		return false;
-//	}
-//}
-
 
 /**
  * Play
@@ -234,16 +172,11 @@ void play() {
 //	int potiValue = analogRead(tempoPoti);
 //	unsigned int calculatedDelay = calcDelay(potiValue);
 
-	if(stopwatch.isRunning() && sequence[currentStep].length > stopwatch.elapsed()) {
+	MidiCommand command = sequence.getCurrentMidiCommand();
+
+	if(stopwatch.isRunning() && command.length > stopwatch.elapsed()) {
 		//Serial.write(" StopWatch Hold ");
 		return;
-	}
-
-	if(currentStep == lastStep) {
-		currentStep = 0;
-	}
-	else {
-		currentStep++;
 	}
 
 	//nextLed(currentStep, lastStep);
@@ -252,7 +185,7 @@ void play() {
 	stopwatch.start();
 
 	//Serial.write("Write Command");
-	sendMidiCommand(sequence[currentStep]);
+	sendMidiCommand(command);
 	//Serial.write(currentStep);
 }
 
