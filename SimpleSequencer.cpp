@@ -13,8 +13,6 @@ StopWatch stopwatch = StopWatch();
 
 Sequence sequence = Sequence();
 
-//struct MidiCommand sequence[32];
-
 const int stepLed1 = 6;
 const int stepLed2 = 7;
 const int stepLed3 = 8;
@@ -24,8 +22,8 @@ const int stepLed6 = 11;
 const int stepLed7 = 12;
 const int stepLed8 = 13;
 
-const int modeLed1 = 3;
-const int modeLed2 = 4;
+const int playLed = 3;
+const int recordLed = 4;
 const int modeLed3 = 5;
 
 const int tempoPoti = A2; // Analog A2
@@ -33,14 +31,6 @@ int tempoPotiPosition;
 
 const int playButton = A0;
 const int recordButton = A1;
-
-const byte NOTE_ON = 144;
-//const byte NOTE_ON = 0x90;
-const byte NOTE_OFF = 128;
-//const byte NOTE_OFF = 0x80;
-
-
-int step = 0;
 
 void setup() {
 	// set the digital pin for the 8 step leds
@@ -53,22 +43,16 @@ void setup() {
 	pinMode(stepLed7, OUTPUT);
 	pinMode(stepLed8, OUTPUT);
 
-	pinMode(modeLed1, OUTPUT);
-	pinMode(modeLed2, OUTPUT);
+	pinMode(playLed, OUTPUT);
+	pinMode(recordLed, OUTPUT);
 	pinMode(modeLed3, OUTPUT);
 
-	//pinMode(button1, INPUT);
-	//pinMode(button2, INPUT);
 	pinMode(tempoPoti, INPUT);
 
 	pinMode(playButton, INPUT);
 	pinMode(recordButton, INPUT);
 
 	MIDI.begin();
-
-
-	//Serial.begin(31250); //Baudrate for Midi
-	//Serial.begin(9600); //Baudrate for Serial communication = Debugging
 }
 
 
@@ -112,15 +96,15 @@ void loop(){
 	if(playPressed && (playPressed != lastPlayButtonState)) {
 		playState = !playState;
 		recordState = false;
-		digitalWrite(modeLed2, LOW);
-		digitalWrite(modeLed1, HIGH);
+		digitalWrite(recordLed, LOW);
+		digitalWrite(playLed, HIGH);
 		sequence.resetPlaybackState();
 	}
 	if(recordPressed && (recordPressed != lastRecordButtonState)) {
 		recordState = !recordState;
 		playState = false;
-		digitalWrite(modeLed1, LOW);
-		digitalWrite(modeLed2, HIGH);
+		digitalWrite(playLed, LOW);
+		digitalWrite(recordLed, HIGH);
 		sequence.resetRecordState();
 		stopwatch.reset();
 		stopwatch.start();
@@ -181,6 +165,7 @@ void play() {
 
 	//nextLed(currentStep, lastStep);
 	//int sequenceStep = currentStep * 2;
+	sequence.nextStep();
 	stopwatch.reset();
 	stopwatch.start();
 
