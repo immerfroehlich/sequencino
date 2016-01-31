@@ -63,6 +63,8 @@ void Sequence::nextStep() {
 		maxSteps++;
 	}
 	else {
+		//TODO Durch step++ und if(step > maxSteps) step = 0; ersetzten
+		//um ggf den modulo overflow zu beseitigen.
 		step = (step + 1) % (maxSteps + 1);
 	}
 }

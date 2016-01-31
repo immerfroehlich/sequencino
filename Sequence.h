@@ -7,7 +7,7 @@
 class Sequence {
 
 	private:
-		struct MidiCommand sequence[32];
+		struct MidiCommand sequence[50];
 		int step;
 		int maxSteps;
 		int state; //1=record; 2=playback

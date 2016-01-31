@@ -82,6 +82,10 @@ void sendMidiCommand(struct MidiCommand command) {
 	MIDI.send(command.command, command.param1, command.param2, 1);
 }
 
+void sendMidiAllSoundOff() {
+	MIDI.sendControlChange(midi::AllSoundOff, 0, 1);
+}
+
 boolean playState = false;
 boolean recordState = false;
 boolean lastPlayButtonState = false;
@@ -99,6 +103,11 @@ void loop(){
 		digitalWrite(recordLed, LOW);
 		digitalWrite(playLed, HIGH);
 		sequence.resetPlaybackState();
+
+		sendMidiAllSoundOff();
+
+		//In HardwareSerial.cpp old flush method cleared the uart buffer
+		//_rx_buffer->head = _rx_buffer->tail;
 	}
 	if(recordPressed && (recordPressed != lastRecordButtonState)) {
 		recordState = !recordState;
@@ -108,6 +117,8 @@ void loop(){
 		sequence.resetRecordState();
 		stopwatch.reset();
 		stopwatch.start();
+
+		sendMidiAllSoundOff();
 	}
 	lastPlayButtonState = playPressed;
 	lastRecordButtonState = recordPressed;
@@ -125,7 +136,7 @@ void loop(){
 
 void midiThrough() {
 	//Midi through is a configuration in the MIDI library
-
+	MIDI.read();
 
 //	if(Serial.available() > 2) {
 //		Serial.write(Serial.read());
@@ -142,9 +153,10 @@ void record(){
 		unsigned int length = stopwatch.elapsed();
 		sequence.nextStep();
 
-		digitalWrite(stepLed1, HIGH);
-		delay(100);
-		digitalWrite(stepLed1, LOW);
+		//Just debug stuff
+		//digitalWrite(stepLed1, HIGH);
+		//delay(100);
+		//digitalWrite(stepLed1, LOW);
 
 		//Wird das hier erzeugte MidiCommand wieder aufgeräumt?
 		MidiCommand command = {MIDI.getType(), MIDI.getData1(), MIDI.getData2(), length};
