@@ -68,8 +68,8 @@ void Sequence::nextStep() {
 }
 
 void Sequence::resetRecordState() {
-	step = 0;
-	maxSteps = 0;
+	step = -1;
+	maxSteps = -1;
 	state = 1; //record
 }
 

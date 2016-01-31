@@ -136,8 +136,15 @@ void midiThrough() {
 
 void record(){
 	if (MIDI.read()) {               // Is there a MIDI message incoming ?
+		if(MIDI.getType() != midi::NoteOn && MIDI.getType() != midi::NoteOff) {
+			return;
+		}
 		unsigned int length = stopwatch.elapsed();
 		sequence.nextStep();
+
+		digitalWrite(stepLed1, HIGH);
+		delay(100);
+		digitalWrite(stepLed1, LOW);
 
 		//Wird das hier erzeugte MidiCommand wieder aufgeräumt?
 		MidiCommand command = {MIDI.getType(), MIDI.getData1(), MIDI.getData2(), length};
@@ -145,7 +152,7 @@ void record(){
 		stopwatch.reset();
 		stopwatch.start();
 
-		sendMidiCommand(command);
+		//sendMidiCommand(command);
 	}
 }
 
