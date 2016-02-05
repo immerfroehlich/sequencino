@@ -172,15 +172,15 @@ void record(){
  * Play
  **/
 void play() {
-//	int potiValue = analogRead(tempoPoti);
-//	unsigned int calculatedDelay = calcDelay(potiValue);
+	int potiValue = analogRead(tempoPoti);
+	unsigned int calculatedDelay = calcDelay(potiValue);
 
-	MidiCommand command = sequence.getCurrentMidiCommand();
 
-	if(stopwatch.isRunning() && command.length > stopwatch.elapsed()) {
+	if(stopwatch.isRunning() && calculatedDelay > stopwatch.elapsed()) {
 		//Serial.write(" StopWatch Hold ");
 		return;
 	}
+	MidiCommand command = sequence.getCurrentMidiCommand();
 
 	//nextLed(currentStep, lastStep);
 	//int sequenceStep = currentStep * 2;
@@ -194,7 +194,7 @@ void play() {
 }
 
 int calcDelay(int potiValue) {
-	return map(potiValue, 0, 1023, 40, 1000);
+	return map(potiValue, 0, 1023, 20, 500);
 
 	//40 * log(x*10) -160
 	//int returnVal = 40 * log(potiValue*10+50) - 160;
