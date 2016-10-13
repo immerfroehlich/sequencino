@@ -64,3 +64,8 @@ Anything else
 ----------------------
 - 1x Lumberg Einbaukupplung DIN45323 (http://www.reichelt.de/Hohlstecker/LUM-NEB-1R/3/index.html?ACTION=3&GROUPID=3258&ARTICLE=116267&SEARCH=LUM%20NEB%201R&OFFSET=16&WKID=0&)
 - Kabel (Litze) 0,22^2, 4x5m (http://www.pollin.de/shop/dt/MTI2OTkxOTk-/Haustechnik/Kabel_Draehte_Litzen/Litzen/Litzen_Sortiment_0_22_mm_4x_5_m.html)
+
+Optional (for the ease of use)
+----------------------
+- 1x GS 28-S :: IC-Sockel, 28-polig, doppelter Federkontakt (http://www.reichelt.de/IC-Sockel/GS-28-S/3/index.html?ACTION=3&GROUPID=7429&ARTICLE=86281&OFFSET=500&)
+- 

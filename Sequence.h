@@ -23,4 +23,6 @@ class Sequence {
 
 		MidiCommand getCurrentMidiCommand();
 		void setCurrentMidiCommand(MidiCommand);
+
+		MidiCommand getStep(int step);
 };

@@ -88,4 +88,8 @@ void Sequence::setCurrentMidiCommand(MidiCommand command) {
 	sequence[step] = command;
 }
 
+MidiCommand Sequence::getStep(int step) {
+	return sequence[step];
+}
+
 

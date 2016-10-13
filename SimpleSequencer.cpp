@@ -11,6 +11,8 @@ MIDI_CREATE_DEFAULT_INSTANCE();
 
 StopWatch stopwatch = StopWatch();
 
+Sequence tracks[4];
+
 Sequence sequence = Sequence();
 
 const int stepLed1 = 6;
