@@ -9,10 +9,6 @@
 
 Sequence::Sequence()  {
 	setupMelody();
-	step = 7;
-	maxSteps = 7;
-	state = 2; //playback
-
 }
 
 void Sequence::setupMelody() {
@@ -57,35 +53,12 @@ void Sequence::setupMelody() {
 	sequence[7].length = 1500;
 }
 
-void Sequence::nextStep() {
-	if(state == 1) { //record
-		step++;
-		maxSteps++;
-	}
-	else {
-		//TODO Durch step++ und if(step > maxSteps) step = 0; ersetzten
-		//um ggf den modulo overflow zu beseitigen.
-		step = (step + 1) % (maxSteps + 1);
-	}
-}
-
-void Sequence::resetRecordState() {
-	step = -1;
-	maxSteps = -1;
-	state = 1; //record
-}
-
-void Sequence::resetPlaybackState() {
-	step = 0;
-	state = 2; //playback
-}
-
-MidiCommand Sequence::getCurrentMidiCommand() {
-	return sequence[step];
-}
-
-void Sequence::setCurrentMidiCommand(MidiCommand command) {
+void Sequence::setStep(int step, MidiCommand command) {
 	sequence[step] = command;
+}
+
+MidiCommand Sequence::getStep(int step) {
+	return sequence[step];
 }
 
 

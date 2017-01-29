@@ -1,17 +1,19 @@
 // Do not remove the include below
 #include "SimpleSequencer.h"
-
 #include "StopWatch.h"
-
 #include "Sequence.h"
-
 #include "MIDI.h"
+#include "AnalogMomentaryPushButton.h"
 
 MIDI_CREATE_DEFAULT_INSTANCE();
 
 StopWatch stopwatch = StopWatch();
 
-Sequence sequence = Sequence();
+Sequence tracks[4];
+
+int step = 7;
+int maxSteps = 7;
+int state = 2; //1=record; 2=playback
 
 const int stepLed1 = 6;
 const int stepLed2 = 7;
@@ -29,8 +31,9 @@ const int modeLed3 = 5;
 const int tempoPoti = A2; // Analog A2
 int tempoPotiPosition;
 
-const int playButton = A0;
 const int recordButton = A1;
+
+AnalogMomentaryPushButton playButton;
 
 void setup() {
 	// set the digital pin for the 8 step leds
@@ -49,7 +52,7 @@ void setup() {
 
 	pinMode(tempoPoti, INPUT);
 
-	pinMode(playButton, INPUT);
+	playButton.initialize(A0);
 	pinMode(recordButton, INPUT);
 
 	MIDI.begin();
@@ -86,23 +89,44 @@ void sendMidiAllSoundOff() {
 	MIDI.sendControlChange(midi::AllSoundOff, 0, 1);
 }
 
+void nextStep() {
+	if(state == 1) { //record
+		step++;
+		maxSteps++;
+	}
+	else {
+		//TODO Durch step++ und if(step > maxSteps) step = 0; ersetzten
+		//um ggf den modulo overflow zu beseitigen.
+		step = (step + 1) % (maxSteps + 1);
+	}
+}
+
+void resetRecordState() {
+	step = -1;
+	maxSteps = -1;
+	state = 1; //record
+}
+
+void resetPlaybackState() {
+	step = 0;
+	state = 2; //playback
+}
+
 boolean playState = false;
 boolean recordState = false;
 boolean lastPlayButtonState = false;
 boolean lastRecordButtonState = false;
 
 void loop(){
-	boolean playPressed = analogRead(playButton) > 500 ? true : false;
-	//boolean playPressed = digitalRead(playButton); 
 	
 	boolean recordPressed = analogRead(recordButton) > 500 ? true : false;
 	//boolean recordPressed = digitalRead(recordButton);  
-	if(playPressed && (playPressed != lastPlayButtonState)) {
+	if(playButton.isToggled()) {
 		playState = !playState;
 		recordState = false;
 		digitalWrite(recordLed, LOW);
 		digitalWrite(playLed, HIGH);
-		sequence.resetPlaybackState();
+		resetPlaybackState();
 
 		sendMidiAllSoundOff();
 
@@ -114,13 +138,12 @@ void loop(){
 		playState = false;
 		digitalWrite(playLed, LOW);
 		digitalWrite(recordLed, HIGH);
-		sequence.resetRecordState();
+		resetRecordState();
 		stopwatch.reset();
 		stopwatch.start();
 
 		sendMidiAllSoundOff();
 	}
-	lastPlayButtonState = playPressed;
 	lastRecordButtonState = recordPressed;
 
 	if(playState) {
@@ -151,16 +174,16 @@ void record(){
 			return;
 		}
 		unsigned int length = stopwatch.elapsed();
-		sequence.nextStep();
+		nextStep();
 
 		//Just debug stuff
-		//digitalWrite(stepLed1, HIGH);
-		//delay(100);
-		//digitalWrite(stepLed1, LOW);
+		digitalWrite(stepLed1, HIGH);
+		delay(100);
+		digitalWrite(stepLed1, LOW);
 
 		//Wird das hier erzeugte MidiCommand wieder aufgeräumt?
 		MidiCommand command = {MIDI.getType(), MIDI.getData1(), MIDI.getData2(), length};
-		sequence.setCurrentMidiCommand(command);
+		tracks[0].setStep(step, command);
 		stopwatch.reset();
 		stopwatch.start();
 
@@ -180,11 +203,11 @@ void play() {
 		//Serial.write(" StopWatch Hold ");
 		return;
 	}
-	MidiCommand command = sequence.getCurrentMidiCommand();
+	MidiCommand command = tracks[0].getStep(step);
 
 	//nextLed(currentStep, lastStep);
 	//int sequenceStep = currentStep * 2;
-	sequence.nextStep();
+	nextStep();
 	stopwatch.reset();
 	stopwatch.start();
 
@@ -206,3 +229,5 @@ int calcDelay(int potiValue) {
 	//  int tempoValue = (1000 / 100) * potiPercent + 50;
 	//  return tempoValue;
 }
+
+
