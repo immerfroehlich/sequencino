@@ -72,4 +72,10 @@ Anything else
 Optional (for the ease of use)
 ----------------------
 - 1x GS 28-S :: IC-Sockel, 28-polig, doppelter Federkontakt (http://www.reichelt.de/IC-Sockel/GS-28-S/3/index.html?ACTION=3&GROUPID=7429&ARTICLE=86281&OFFSET=500&)
+
+Relase Notes
+=======================
+Version 1.0.0:
+----------------
+Finished working single track recording and playback with tempo poti.
 - 
