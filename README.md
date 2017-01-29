@@ -78,4 +78,3 @@ Relase Notes
 Version 1.0.0:
 ----------------
 Finished working single track recording and playback with tempo poti.
-- 
