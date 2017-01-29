@@ -1,9 +1,19 @@
 // Do not remove the include below
 #include "SimpleSequencer.h"
-
 #include "StopWatch.h"
+#include "Sequence.h"
+#include "MIDI.h"
+#include "AnalogMomentaryPushButton.h"
 
-struct MidiCommand sequence[32];
+MIDI_CREATE_DEFAULT_INSTANCE();
+
+StopWatch stopwatch = StopWatch();
+
+Sequence tracks[4];
+
+int step = 7;
+int maxSteps = 7;
+int state = 2; //1=record; 2=playback
 
 const int stepLed1 = 6;
 const int stepLed2 = 7;
@@ -14,23 +24,16 @@ const int stepLed6 = 11;
 const int stepLed7 = 12;
 const int stepLed8 = 13;
 
-const int modeLed1 = 3;
-const int modeLed2 = 4;
+const int playLed = 3;
+const int recordLed = 4;
 const int modeLed3 = 5;
 
 const int tempoPoti = A2; // Analog A2
 int tempoPotiPosition;
 
-const int playButton = A0;
 const int recordButton = A1;
 
-//const byte NOTE_ON = 144;
-const byte NOTE_ON = 0x90;
-//const byte NOTE_OFF = 128;
-const byte NOTE_OFF = 0x80;
-
-
-int step = 0;
+AnalogMomentaryPushButton playButton;
 
 void setup() {
 	// set the digital pin for the 8 step leds
@@ -43,57 +46,19 @@ void setup() {
 	pinMode(stepLed7, OUTPUT);
 	pinMode(stepLed8, OUTPUT);
 
-	pinMode(modeLed1, OUTPUT);
-	pinMode(modeLed2, OUTPUT);
+	pinMode(playLed, OUTPUT);
+	pinMode(recordLed, OUTPUT);
 	pinMode(modeLed3, OUTPUT);
 
-	//pinMode(button1, INPUT);
-	//pinMode(button2, INPUT);
 	pinMode(tempoPoti, INPUT);
 
-	pinMode(playButton, INPUT);
+	playButton.initialize(A0);
 	pinMode(recordButton, INPUT);
 
-	setupMelody();
-
-
-	Serial.begin(31250); //Baudrate for Midi
-	//Serial.begin(9600); //Baudrate for Serial communication = Debugging
+	MIDI.begin();
 }
 
-void setupMelody() {
-	sequence[0].command = NOTE_ON;
-	sequence[0].param1 = 50;
-	sequence[0].param2 = 100;
 
-	sequence[1].command = NOTE_OFF;
-	sequence[1].param1 = 50;
-	sequence[1].param2 = 100;
-
-	sequence[2].command = NOTE_ON;
-	sequence[2].param1 = 52;
-	sequence[2].param2 = 100;
-
-	sequence[3].command = NOTE_OFF;
-	sequence[3].param1 = 52;
-	sequence[3].param2 = 100;
-
-	sequence[4].command = NOTE_ON;
-	sequence[4].param1 = 54;
-	sequence[4].param2 = 100;
-
-	sequence[5].command = NOTE_OFF;
-	sequence[5].param1 = 54;
-	sequence[5].param2 = 100;
-
-	sequence[6].command = NOTE_ON;
-	sequence[6].param1 = 57;
-	sequence[6].param2 = 100;
-
-	sequence[7].command = NOTE_OFF;
-	sequence[7].param1 = 57;
-	sequence[7].param2 = 100;
-}
 
 /**
  * LED and counter
@@ -117,47 +82,68 @@ void nextLed(int currentStep, int lastStep) {
 }
 
 void sendMidiCommand(struct MidiCommand command) {
-	sendMidiCommandParams(command.command, command.param1, command.param2);
+	MIDI.send(command.command, command.param1, command.param2, 1);
 }
 
-void sendMidiCommandParams(byte command, byte param1, byte param2) {
-	Serial.write(command);
-	Serial.write(param1);
-	Serial.write(param2);
+void sendMidiAllSoundOff() {
+	MIDI.sendControlChange(midi::AllSoundOff, 0, 1);
 }
 
-//Ein Step sind immer zwei
-//Sequence- Steps (Note ein, Note aus)
-int lastStep = 3; //lastSequence-1 / 2
-int currentStep = 3; //begins with lastStep
-int sequenceStep = 7;
+void nextStep() {
+	if(state == 1) { //record
+		step++;
+		maxSteps++;
+	}
+	else {
+		//TODO Durch step++ und if(step > maxSteps) step = 0; ersetzten
+		//um ggf den modulo overflow zu beseitigen.
+		step = (step + 1) % (maxSteps + 1);
+	}
+}
+
+void resetRecordState() {
+	step = -1;
+	maxSteps = -1;
+	state = 1; //record
+}
+
+void resetPlaybackState() {
+	step = 0;
+	state = 2; //playback
+}
+
 boolean playState = false;
 boolean recordState = false;
 boolean lastPlayButtonState = false;
 boolean lastRecordButtonState = false;
 
 void loop(){
-	boolean playPressed = analogRead(playButton) > 500 ? true : false;
-	//boolean playPressed = digitalRead(playButton); 
 	
 	boolean recordPressed = analogRead(recordButton) > 500 ? true : false;
 	//boolean recordPressed = digitalRead(recordButton);  
-	if(playPressed && (playPressed != lastPlayButtonState)) {
+	if(playButton.isToggled()) {
 		playState = !playState;
 		recordState = false;
-		digitalWrite(modeLed2, LOW);
-		digitalWrite(modeLed1, HIGH);
-		currentStep = lastStep;
+		digitalWrite(recordLed, LOW);
+		digitalWrite(playLed, HIGH);
+		resetPlaybackState();
+
+		sendMidiAllSoundOff();
+
+		//In HardwareSerial.cpp old flush method cleared the uart buffer
+		//_rx_buffer->head = _rx_buffer->tail;
 	}
 	if(recordPressed && (recordPressed != lastRecordButtonState)) {
 		recordState = !recordState;
 		playState = false;
-		digitalWrite(modeLed1, LOW);
-		digitalWrite(modeLed2, HIGH);
-		lastStep = -1;
-		sequenceStep = -1;
+		digitalWrite(playLed, LOW);
+		digitalWrite(recordLed, HIGH);
+		resetRecordState();
+		stopwatch.reset();
+		stopwatch.start();
+
+		sendMidiAllSoundOff();
 	}
-	lastPlayButtonState = playPressed;
 	lastRecordButtonState = recordPressed;
 
 	if(playState) {
@@ -172,43 +158,38 @@ void loop(){
 }
 
 void midiThrough() {
-	if(Serial.available() > 0) {
-		Serial.write(Serial.read());
-	}
+	//Midi through is a configuration in the MIDI library
+	MIDI.read();
+
+//	if(Serial.available() > 2) {
+//		Serial.write(Serial.read());
+//		Serial.write(Serial.read());
+//		Serial.write(Serial.read());
+//	}
 }
 
 void record(){
-	while (Serial.available() > 2) {
-		byte commandByte = Serial.read();//read first byte
-
-		if(commandByte == NOTE_ON || commandByte == NOTE_OFF) {
-			byte noteByte = Serial.read();//read next byte
-			byte velocityByte = Serial.read();//read final byte
-			sequenceStep++;
-			lastStep = sequenceStep / 2;
-			sequence[sequenceStep].command = commandByte;
-			sequence[sequenceStep].param1 = noteByte;
-			sequence[sequenceStep].param2 = velocityByte;
-
-			sendMidiCommand(sequence[sequenceStep]);
+	if (MIDI.read()) {               // Is there a MIDI message incoming ?
+		if(MIDI.getType() != midi::NoteOn && MIDI.getType() != midi::NoteOff) {
+			return;
 		}
-		else {
-			break;
-		}
+		unsigned int length = stopwatch.elapsed();
+		nextStep();
+
+		//Just debug stuff
+		digitalWrite(stepLed1, HIGH);
+		delay(100);
+		digitalWrite(stepLed1, LOW);
+
+		//Wird das hier erzeugte MidiCommand wieder aufgeräumt?
+		MidiCommand command = {MIDI.getType(), MIDI.getData1(), MIDI.getData2(), length};
+		tracks[0].setStep(step, command);
+		stopwatch.reset();
+		stopwatch.start();
+
+		//sendMidiCommand(command);
 	}
 }
-
-//boolean isCommand(byte midiByte) {
-//	byte command = midiByte & 10000000;
-//	command = command >> 7;
-//	if(command == 1) {
-//		return true;
-//	}
-//	else {
-//		return false;
-//	}
-//}
-
 
 /**
  * Play
@@ -217,28 +198,26 @@ void play() {
 	int potiValue = analogRead(tempoPoti);
 	unsigned int calculatedDelay = calcDelay(potiValue);
 
-	if(currentStep == lastStep) {
-		currentStep = 0;
-	}
-	else {
-		currentStep++;
-	}
 
-	nextLed(currentStep, lastStep);
-	int sequenceStep = currentStep * 2;
-	if(currentStep == 0) {
-		sendMidiCommand(sequence[lastStep * 2 + 1]);
+	if(stopwatch.isRunning() && calculatedDelay > stopwatch.elapsed()) {
+		//Serial.write(" StopWatch Hold ");
+		return;
 	}
-	else {
-		sendMidiCommand(sequence[sequenceStep - 1]);
-	}
-	sendMidiCommand(sequence[sequenceStep]);
+	MidiCommand command = tracks[0].getStep(step);
 
-	delay(calculatedDelay);
+	//nextLed(currentStep, lastStep);
+	//int sequenceStep = currentStep * 2;
+	nextStep();
+	stopwatch.reset();
+	stopwatch.start();
+
+	//Serial.write("Write Command");
+	sendMidiCommand(command);
+	//Serial.write(currentStep);
 }
 
 int calcDelay(int potiValue) {
-	return map(potiValue, 0, 1023, 40, 1000);
+	return map(potiValue, 0, 1023, 20, 500);
 
 	//40 * log(x*10) -160
 	//int returnVal = 40 * log(potiValue*10+50) - 160;
@@ -250,3 +229,5 @@ int calcDelay(int potiValue) {
 	//  int tempoValue = (1000 / 100) * potiPercent + 50;
 	//  return tempoValue;
 }
+
+

@@ -7,6 +7,7 @@
 #ifndef _SimpleSequencer_H_
 #define _SimpleSequencer_H_
 #include "Arduino.h"
+#include "midi_Defs.h"
 //add your includes for the project ArduinoTest here
 
 
@@ -14,14 +15,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-struct MidiCommand {
-  byte command;
-  byte param1;
-  byte param2;
-};
+
 void loop();
 void setup();
-void setupMelody();
 void sendMidiCommand(struct MidiCommand command);
 void sendMidiCommandParams(byte command, byte param1, byte param2);
 void midiThrough();
