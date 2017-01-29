@@ -15,6 +15,10 @@ But that is only temporary.
 The midi input schematic is based upon the "Send and Receive MIDI with Arduino"
 instructable tutorial by amandaghassaei:
 http://www.instructables.com/id/Send-and-Receive-MIDI-with-Arduino/?ALLSTEPS
+And the Arudino schematic is based upon the "Arduino on a breadboard" article
+https://www.arduino.cc/en/Main/Standalone but without the power regulation
+and the usb to serial modules, because the power comes from a regulated
+power supply already.
 
 Fritzing can be downloaded here:
 http://fritzing.org/download/

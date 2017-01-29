@@ -8,21 +8,13 @@ class Sequence {
 
 	private:
 		struct MidiCommand sequence[50];
-		int step;
-		int maxSteps;
-		int state; //1=record; 2=playback
 
 		void setupMelody();
 
 
 	public:
 		Sequence();
-		void nextStep();
-		void resetRecordState();
-		void resetPlaybackState();
 
-		MidiCommand getCurrentMidiCommand();
-		void setCurrentMidiCommand(MidiCommand);
-
+		void setStep(int step, MidiCommand command);
 		MidiCommand getStep(int step);
 };
