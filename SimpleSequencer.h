@@ -18,7 +18,7 @@ extern "C" {
 
 void loop();
 void setup();
-void sendMidiCommand(struct MidiCommand command);
+void sendMidiCommand(struct MidiCommand command, byte channel);
 void sendMidiCommandParams(byte command, byte param1, byte param2);
 void midiThrough();
 void record();

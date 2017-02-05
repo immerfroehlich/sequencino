@@ -81,8 +81,8 @@ void nextLed(int currentStep, int lastStep) {
 	digitalWrite(led, HIGH);
 }
 
-void sendMidiCommand(struct MidiCommand command) {
-	MIDI.send(command.command, command.param1, command.param2, 1);
+void sendMidiCommand(struct MidiCommand command, byte channel) {
+	MIDI.send(command.command, command.param1, command.param2, channel);
 }
 
 void sendMidiAllSoundOff() {
@@ -203,7 +203,11 @@ void play() {
 		//Serial.write(" StopWatch Hold ");
 		return;
 	}
-	MidiCommand command = tracks[0].getStep(step);
+
+	for(byte channel=1; channel < 5; channel++) {
+		MidiCommand command = tracks[channel-1].getStep(step);
+		sendMidiCommand(command, channel);
+	}
 
 	//nextLed(currentStep, lastStep);
 	//int sequenceStep = currentStep * 2;
@@ -211,9 +215,6 @@ void play() {
 	stopwatch.reset();
 	stopwatch.start();
 
-	//Serial.write("Write Command");
-	sendMidiCommand(command);
-	//Serial.write(currentStep);
 }
 
 int calcDelay(int potiValue) {
