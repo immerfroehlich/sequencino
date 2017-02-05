@@ -31,9 +31,8 @@ const int modeLed3 = 5;
 const int tempoPoti = A2; // Analog A2
 int tempoPotiPosition;
 
-const int recordButton = A1;
-
 AnalogMomentaryPushButton playButton;
+AnalogMomentaryPushButton recordButton;
 
 void setup() {
 	// set the digital pin for the 8 step leds
@@ -53,7 +52,7 @@ void setup() {
 	pinMode(tempoPoti, INPUT);
 
 	playButton.initialize(A0);
-	pinMode(recordButton, INPUT);
+	recordButton.initialize(A1);
 
 	MIDI.begin();
 }
@@ -114,13 +113,9 @@ void resetPlaybackState() {
 
 boolean playState = false;
 boolean recordState = false;
-boolean lastPlayButtonState = false;
-boolean lastRecordButtonState = false;
 
 void loop(){
 	
-	boolean recordPressed = analogRead(recordButton) > 500 ? true : false;
-	//boolean recordPressed = digitalRead(recordButton);  
 	if(playButton.isToggled()) {
 		playState = !playState;
 		recordState = false;
@@ -133,7 +128,7 @@ void loop(){
 		//In HardwareSerial.cpp old flush method cleared the uart buffer
 		//_rx_buffer->head = _rx_buffer->tail;
 	}
-	if(recordPressed && (recordPressed != lastRecordButtonState)) {
+	if(recordButton.isToggled()) {
 		recordState = !recordState;
 		playState = false;
 		digitalWrite(playLed, LOW);
@@ -144,7 +139,6 @@ void loop(){
 
 		sendMidiAllSoundOff();
 	}
-	lastRecordButtonState = recordPressed;
 
 	if(playState) {
 		play();
