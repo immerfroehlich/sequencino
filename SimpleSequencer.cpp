@@ -11,16 +11,9 @@ StopWatch stopwatch = StopWatch();
 
 Sequence tracks[4];
 
-struct ChannelStep {
-			int step = 7;
-			int maxSteps = 7;
-		};
-
-ChannelStep channelStep[4];
 int step = 7;
 int maxSteps = 7;
 int state = 2; //1=record; 2=playback
-int channel = 1;
 
 const int stepLed1 = 6;
 const int stepLed2 = 7;
@@ -40,7 +33,6 @@ int tempoPotiPosition;
 
 AnalogMomentaryPushButton playButton;
 AnalogMomentaryPushButton recordButton;
-AnalogMomentaryPushButton channelButton;
 
 void setup() {
 	// set the digital pin for the 8 step leds
@@ -61,7 +53,6 @@ void setup() {
 
 	playButton.initialize(A0);
 	recordButton.initialize(A1);
-	channelButton.initialize(A3);
 
 	MIDI.begin();
 }
@@ -99,16 +90,8 @@ void sendMidiAllSoundOff() {
 
 void nextStep() {
 	if(state == 1) { //record
-		if(channelStep[channel].step == step) {
-			channelStep[channel].step++;
-			channelStep[channel].maxSteps++;
-			step++;
-			maxSteps++;
-		}
-		else {
-			channelStep[channel].step++;
-			channelStep[channel].maxSteps++;
-		}
+		step++;
+		maxSteps++;
 	}
 	else {
 		//TODO Durch step++ und if(step > maxSteps) step = 0; ersetzten
@@ -121,10 +104,6 @@ void resetRecordState() {
 	step = -1;
 	maxSteps = -1;
 	state = 1; //record
-	for(byte i = 1; i < 5; i++) {
-		channelStep[i].maxSteps = -1;
-		channelStep[i].step = -1;
-	}
 }
 
 void resetPlaybackState() {
@@ -160,12 +139,6 @@ void loop(){
 
 		sendMidiAllSoundOff();
 	}
-	if(channelButton.isToggled()) {
-		channel++;
-		if(channel == 5) {
-			channel = 1;
-		}
-	}
 
 	if(playState) {
 		play();
@@ -181,6 +154,12 @@ void loop(){
 void midiThrough() {
 	//Midi through is a configuration in the MIDI library
 	MIDI.read();
+
+//	if(Serial.available() > 2) {
+//		Serial.write(Serial.read());
+//		Serial.write(Serial.read());
+//		Serial.write(Serial.read());
+//	}
 }
 
 void record(){
@@ -198,9 +177,11 @@ void record(){
 
 		//Wird das hier erzeugte MidiCommand wieder aufgeräumt?
 		MidiCommand command = {MIDI.getType(), MIDI.getData1(), MIDI.getData2(), length};
-		tracks[channel].setStep(step, command);
+		tracks[0].setStep(step, command);
 		stopwatch.reset();
 		stopwatch.start();
+
+		//sendMidiCommand(command);
 	}
 }
 
@@ -218,10 +199,8 @@ void play() {
 	}
 
 	for(byte channel=1; channel < 5; channel++) {
-		if(step <= channelStep[channel].maxSteps) {
-			MidiCommand command = tracks[channel-1].getStep(step);
-			sendMidiCommand(command, channel);
-		}
+		MidiCommand command = tracks[channel-1].getStep(step);
+		sendMidiCommand(command, channel);
 	}
 
 	//nextLed(currentStep, lastStep);
