@@ -72,6 +72,7 @@ Anything else
 Optional (for the ease of use)
 ----------------------
 - 1x GS 28-S :: IC-Sockel, 28-polig, doppelter Federkontakt (http://www.reichelt.de/IC-Sockel/GS-28-S/3/index.html?ACTION=3&GROUPID=7429&ARTICLE=86281&OFFSET=500&)
+- 1x Streifenrasterplatine auf Hartpapier fuer Schaltungsaufbau (z.B. https://www.reichelt.de/streifenrasterplatine-hartpapier-50x100mm-h25sr050-p8275.html?&trstct=pol_3)
 
 Relase Notes
 =======================
